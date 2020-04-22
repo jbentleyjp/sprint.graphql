@@ -12,41 +12,51 @@ const schema = buildSchema(`
     types: [String]
     resistant: [String]
     weaknesses: [String]
-    weight: String
-    height: String
-    fleeRate: Int
-    evolutionRequirements: String
+    weight: WeightMaxMin
+    height: HeightMaxMin
+    fleeRate: Float
+    evolutionRequirements: RequiredToEvo
     evolutions: [String]
     maxCP: Int
     maxHP: Int
-    attacks: PokemonAttacks
+    attacks: AllAtks
   }
-  type PokemonAttacks {
-    fast: [PokemonAttack]
-    special: [PokemonAttack]
+
+  type WeightMaxMin {
+    minimum: String
+    maximum: String
   }
-  type PokemonAttack {
+
+  type HeightMaxMin {
+    minimum: String
+    maximum: String
+  }
+
+  type RequiredToEvo {
+    amount: Int
+    name: String
+  }
+
+  type AllAtks {
+    fast: [Attack]
+    special: [Attack]
+  }
+  type Attack {
     name: String
     type: String
     damage: Int
   }
-  type AllAttacks {
-    attack: [AttackType]
-  }
-  type AttackType {
-    name: String
-    type: String
-    damage: Int
-  }
+
+  
   type Query {
     Pokemons: [Pokemon]
     Pokemon(name: String, id: String): Pokemon
-    AllAttacks: [AllAttacks]
-    GetAttackType(attacks: String): [Pokemon]
-
+    Attacks(attacks: String): [Pokemon]
+    GetPokemonByType(types: String): [Pokemon]
   }
 
 `);
+// for mutations you can use input keyword, not type keyword
 
 // The root provides the resolver functions for each type of query or mutation.
 const root = {
@@ -58,43 +68,21 @@ const root = {
       (pokemon) => pokemon.id === request.id || pokemon.name === request.name
     );
   },
-  GetAttackType: (request) => {
-    return data.pokemon.forEach((pokemon) => {
-      pokemon.attacks.filter((attackStyle) => {
-        if (attackStyle === request) {
-          return attackStyle;
-        }
-      });
-    });
+  Attacks: (request) => {
+    if (request.attacks === "fast") {
+      return data.attacks.fast;
+    } else if (request.attacks === "special") {
+      return data.attacks.special;
+    }
   },
-  // GetAttackType: (request) => {
-  //   for (const keys in data.attacks) {
-  //     if (keys === request.type) {
-  //       return keys;
-  //     }
-  //   }
-  // },
-  // AllAttacks: () => {
-  //   const attacksArr = [];
-  //   for (const keys in data.attacks) {
-  //     attacksArr.push(keys);
-  //   }
-  //   return attacksArr;
-  // },
-  // GetAttackTypes: (request) => {
-  //   return data.attacks.filter(
-  //     (pokemon) =>
-  //       pokemon.name === request.name || pokemon.types.includes(request.types)
-  //   );
-  // },
-  // GetFastAttacks: (request) => {
-  //   return data.pokemon.forEach((pokemon) =>
-  //     pokemon.attacks.fast.filter((atks) => atks.name === request.attacks)
-  //   );
-  // },
-  // GetPokemonWithAttack: () => {
-  //   return data.attacks;
-  // },
+  GetPokemonByType: (request) => {
+    const pokemonTypeArr = data.pokemon.filter((eachPokemon) => {
+      if (eachPokemon.types.includes(request.types)) {
+        return eachPokemon;
+      }
+    });
+    return pokemonTypeArr;
+  },
 };
 
 // Start your express server!

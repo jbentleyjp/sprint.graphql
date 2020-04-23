@@ -41,6 +41,7 @@ const schema = buildSchema(`
     fast: [Attack]
     special: [Attack]
   }
+
   type Attack {
     name: String
     type: String
@@ -53,6 +54,15 @@ const schema = buildSchema(`
     Pokemon(name: String, id: String): Pokemon
     Attacks(attacks: String): [Pokemon]
     GetPokemonByType(types: String): [Pokemon]
+    GetPokemonByAttack(name: String): [Pokemon]
+  }
+
+  input UpdateType {
+    types: String
+  }
+
+  type Mutation {
+    AddType(name: String, types: String): Pokemon
   }
 
 `);
@@ -82,6 +92,28 @@ const root = {
       }
     });
     return pokemonTypeArr;
+  },
+  GetPokemonByAttack: (request) => {
+    const pokemonAttackFilter = data.pokemon.filter((eachPokemon) => {
+      for (const key of eachPokemon.attacks.fast) {
+        if (request.name === key.name) {
+          return eachPokemon;
+        }
+        for (const key of eachPokemon.attacks.special) {
+          if (request.name === key.name) {
+            return eachPokemon;
+          }
+        }
+      }
+    });
+    return pokemonAttackFilter;
+  },
+  AddType: (request) => {
+    const pokeIndex = data.pokemon.findIndex(
+      (pokemon) => pokemon.name === request.name
+    );
+    data.pokemon[pokeIndex].types.push(request.types);
+    return data.pokemon[pokeIndex];
   },
 };
 
